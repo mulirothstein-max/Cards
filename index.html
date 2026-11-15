@@ -97,7 +97,7 @@ function render(){
  const me=S.pl.find(p=>p.id===S.me);
  if(S.phase==='lobby')return lobby(me);
  if(S.phase==='over')return over();
- game(me)}
+ game(me);specUI()}
 let U=innerHeight/100;function setU(){U=innerHeight/100;document.documentElement.style.setProperty('--u',U+'px');if(S)render()}
 addEventListener('resize',setU);addEventListener('orientationchange',()=>setTimeout(setU,250));document.documentElement.style.setProperty('--u',U+'px');
 const VH=()=>U;
@@ -121,24 +121,25 @@ function game(me){
  h+=`<div class="a" style="left:3%;top:2.5%;font-size:calc(2.7*var(--u));font-weight:800;text-shadow:0 1px 3px #000;max-width:36%">RED CARDS / PUNISHMENT CARDS</div>`;
  h+=`<div class="a fill" id="disc" style="left:22%;top:9%;height:calc(19*var(--u))"><div class="cd back" style="background:#d62828;border-color:#f6b3b3;transform:rotate(-16deg) translate(-12%,2%)"></div><div class="cd back" style="background:#d62828;border-color:#f6b3b3;position:absolute;inset:0;transform:rotate(12deg) translate(10%,-3%)"></div>${S.disc?cd(S.disc,'','','position:absolute;inset:0;transform:rotate(-3deg)'):''}</div>`;
  S.pl.filter(p=>p.id!==S.me).forEach((p,i)=>{const[x,y]=SL[i]||SL[0],k=Math.min(p.n,12);
-  h+=`<div class="oh ${p.id===S.turn?'on':''}" id="o-${p.id}" style="left:${x}%;top:${y}%"><div class="hd">${av(p.av,z)}<span class="chip">${esc(p.name)}</span><span class="badge" style="position:static">${p.out?'🏁':p.n}</span></div><div class="stk" id="stk-${p.id}">${p.out?'':Array.from({length:k},(_,j)=>`<i style="transform:rotate(${(j-(k-1)/2)*6}deg)"></i>`).join('')}</div></div>`});
+  h+=`<div class="oh ${p.id===S.turn?'on':''}" id="o-${p.id}" style="left:${x}%;top:${y}%"><div class="hd">${av(p.av,z)}<span class="chip">${esc(p.name)}${p.cap?' ©':''}${p.y?' 🟨'+p.y:''}</span><span class="badge" style="position:static">${p.out?'🏁':p.n}</span></div><div class="stk" id="stk-${p.id}">${p.out?'':Array.from({length:k},(_,j)=>`<i style="transform:rotate(${(j-(k-1)/2)*6}deg)"></i>`).join('')}</div></div>`});
  h+=`<div class="a fill glow-o" id="punp" style="left:25.6%;top:39%"><div class="cd back"></div><span class="badge">${S.pun}</span><div class="cap" style="color:#ffb066">PUNISHMENT PILE</div></div>`;
  [38.8,49.8,60.8].forEach((x,i)=>{const t=S.piles[i].top;h+=`<div class="a fill" id="pile-${i}" data-p="${i}" style="left:${x}%;top:39%">${cd(t,'')}<span class="badge">${S.piles[i].n}</span><div class="cap" style="color:#cfe">${t?HE[t.cat]||'':''}</div></div>`});
  h+=`<div class="a fill glow-b" id="deckp" style="left:89.1%;top:39%"><div class="cd back"></div><span class="badge">${S.deck}</span><div class="cap" style="color:#9fdcff">DRAW PILE</div></div>`;
  if(S.ann)h+=`<div class="ban">${esc(S.ann.t)}</div>`;
- h+=`<div class="info">${S.pen?`<span class="pen">עונש פעיל: ${esc(S.pen)}</span><br>`:''}${esc(S.last?'אחרון: '+S.last:'')} · <b>${mine?'התור שלך! 🎯':'תור של '+esc(cu?cu.name:'')}</b></div>`;
- h+=`<div class="pan" id="panr"><div class="tm"><span id="tm">${Math.ceil(S.left/1000)}</span><small> s</small></div><button id="cat" ${busy?'disabled':''}>החלף קטגוריה</button><div class="row"><button id="mg" ${S.canChal?'':'disabled'}>${MG}</button><button id="end" ${busy?'disabled':''}>סיום מוקדם</button></div><div style="font-size:calc(2.4*var(--u));text-align:center">${S.mega?'מגפון: זמין':'מגפון: חסום'}</div></div>`;
+ h+=`<div class="info">${S.rule?`<span class="pen" style="background:#7a4bd9">כלל: ${esc(S.rule)}</span> `:''}${S.mute===S.me?'<span class="pen">אתה מושתק</span> ':''}${S.pen?`<span class="pen">עונש פעיל: ${esc(S.pen)}</span><br>`:''}${esc(S.last?'אחרון: '+S.last:'')} · <b>${mine?'התור שלך! 🎯':'תור של '+esc(cu?cu.name:'')}</b></div>`;
+ h+=`<div class="pan" id="panr"><div class="tm"><span id="tm">${Math.ceil(S.left/1000)}</span><small> s</small></div><button id="cat" ${busy?'disabled':''}>החלף קטגוריה</button><div class="row"><button id="mg" ${S.canChal?'':'disabled'}>${MG}</button><button id="end" ${busy?'disabled':''}>סיום מוקדם</button></div>${S.mute&&S.mute!==S.me?'<button id="spk">הוא דיבר!</button>':''}${S.rule?'<button id="rpt">דווח על הפרה</button>':''}<div style="font-size:calc(2.4*var(--u));text-align:center">${S.mega?'מגפון: זמין':'מגפון: חסום'}</div></div>`;
  h+='<div class="pan" id="panl">';
  if(mine&&S.choose&&!S.modal)h+='<button class="p" data-pen="main">שלוף קלף רגיל</button><button class="r" data-pen="pun">שלוף קלף עונש</button>';
  else if(mine&&!busy)h+=`${selc&&selc.k==='red'?'<button class="r" id="red">שחק אדום</button>':''}<button id="pass">אין לי מה לשחק</button>`;
  h+='</div>';
  h+='<div class="hand">'+S.hand.map((c,i)=>{const o=i-(n-1)/2,sc=Math.min(3,18/Math.max(n,6));return cd(c,'','data-c="'+c.id+'"',`transform:translateY(calc(${(o*o*.35*Math.min(1,6/n)+(c.id===sel?-2.6:0)).toFixed(2)}*var(--u))) rotate(${(o*sc).toFixed(1)}deg);${c.id===sel?'box-shadow:0 0 0 3px #ffe66d;':''}`)}).join("")+'</div>';
+ if(S.spec){const sp=S.spec,w=sp.who.filter(id=>!sp.done.includes(id)).map(id=>(S.pl.find(x=>x.id===id)||{}).name).join(', ');if(!(sp.who.includes(S.me)&&!sp.done.includes(S.me)))h+=`<div class="ban" style="top:12%">ממתינים ל${esc(w)}…</div>`}
  const m=S.modal,v=S.vote;
  if(m){const by=m.by===S.me;h+=`<div class="ovl"><div class="ovb"><h3>${esc(m.title)}</h3><div>${esc(m.text)}</div>`+
   (m.kind==='chalpick'?(by?'<button class="p" data-cp="std">שלוף 2 קלפים רגילים</button><button class="r" data-cp="pun">שלוף קלף עונש</button>':'<div class="capt">ממתינים להחלטה…</div>'):
    (m.by==null||by)?'<button class="p" id="ok">הבנתי</button>':'<div class="capt">ממתינים לאישור…</div>')+'</div></div>'}
- else if(v){h+=`<div class="ovl"><div class="ovb">`+(v.type==='cat'?`<div>כפתור החלפת הקטגוריה נלחץ. האם אתה מסכים להחליף קטגוריה?</div>`:v.type==='end'?`<div>${esc(v.byName)} מבקש/ת לסיים את המשחק מוקדם. האם אתה מסכים?</div>`:`<h3>📢 ערעור של ${esc(v.byName)}</h3><div>האם השחקן "${esc(v.name)}" של ${esc(v.tn)} מתאים לקריטריונים?</div><div class="capt">סיבת הערעור: ${esc(v.reason||'—')}</div>`)+
-  (v.mine?'<div class="capt">ממתינים לשאר השחקנים…</div>':'<button class="g" data-v="1">כן</button><button class="r" data-v="0">לא</button>')+'</div></div>'}
+ else if(v){h+=`<div class="ovl"><div class="ovb">`+(v.type==='q'?`<div>${esc(v.text)}</div>`:v.type==='cat'?`<div>כפתור החלפת הקטגוריה נלחץ. האם אתה מסכים להחליף קטגוריה?</div>`:v.type==='end'?`<div>${esc(v.byName)} מבקש/ת לסיים את המשחק מוקדם. האם אתה מסכים?</div>`:`<h3>📢 ערעור של ${esc(v.byName)}</h3><div>האם השחקן "${esc(v.name)}" של ${esc(v.tn)} מתאים לקריטריונים?</div><div class="capt">סיבת הערעור: ${esc(v.reason||'—')}</div>`)+
+  (v.capOnly?'<div class="capt">הקפטן '+esc(v.capOnly)+' מכריע/ה</div>':'')+(v.mine?'<div class="capt">ממתינים לשאר השחקנים…</div>':'<button class="g" data-v="1">כן</button><button class="r" data-v="0">לא</button>')+'</div></div>'}
  app.innerHTML=h;
  const nh=app.querySelector('.hand');if(nh)nh.scrollLeft=sl;
  rects={};app.querySelectorAll("[data-c]").forEach(e=>rects[e.dataset.c]=e.getBoundingClientRect());
@@ -151,8 +152,24 @@ function game(me){
  if(q("#red"))q("#red").onclick=()=>{send({t:"red",card:sel});sel=null};
  if(q("#pass"))q("#pass").onclick=()=>send({t:"pass"});
  if(q("#ok"))q("#ok").onclick=()=>send({t:"ok"});
+ if(q("#spk"))q("#spk").onclick=()=>send({t:"spoke"});if(q("#rpt"))q("#rpt").onclick=()=>send({t:"report"});
  q("#cat").onclick=()=>send({t:"cat"});q("#end").onclick=()=>send({t:"endv"});
  q("#mg").onclick=()=>askText("📢 למה השחקן לא מתאים ל-3 הקטגוריות?","סיבה קצרה…",t=>send({t:"chal",reason:t}))}
+let specEnd=0;
+function specUI(){
+ const sp=S&&S.spec,actor=sp&&sp.who.includes(S.me)&&!sp.done.includes(S.me);
+ if(!actor){if((ov.dataset.k||'').startsWith('spec:')){ov.style.display='none';ov.innerHTML='';ov.dataset.k=''}return}
+ const key='spec:'+sp.sid;if(ov.dataset.k===key)return;ov.dataset.k=key;
+ const done=v=>{ov.style.display='none';ov.innerHTML='';send({t:'spec',v})};
+ let h='<div class="ovb"><div>'+esc(sp.prompt)+'</div>';
+ if(sp.ui==='text'){specEnd=sp.ms?Date.now()+sp.ms:0;h+=(sp.ms?'<div id="spt" style="font-size:26px;text-align:center">'+Math.ceil(sp.ms/1000)+'</div>':'')+'<input id="spi" autocomplete="off" placeholder="כתוב כאן…"><button class="p" id="spo">שלח</button>'}
+ else if(sp.ui==='pick')h+=sp.opts.map(o=>`<button data-sp="${esc(o[0])}">${esc(o[1])}</button>`).join('');
+ else if(sp.ui==='card')h+=S.hand.map(c=>`<button data-sp="${c.id}">${esc(c.l||c.t||'')}</button>`).join('');
+ else if(sp.ui==='rps')h+='<button data-sp="r">✊ אבן</button><button data-sp="p">✋ נייר</button><button data-sp="s">✌️ מספריים</button>';
+ ov.innerHTML=h+'</div>';ov.style.display='flex';
+ ov.querySelectorAll('[data-sp]').forEach(b=>b.onclick=()=>done(b.dataset.sp));
+ const i=document.getElementById('spi');if(i){i.focus();document.getElementById('spo').onclick=()=>done(i.value.trim()||'—')}}
+setInterval(()=>{const e=document.getElementById('spt');if(e&&specEnd)e.textContent=Math.max(0,Math.ceil((specEnd-Date.now())/1000))},250);
 function flyEl(html,a,b,ms,delay,curve){
  const d=document.createElement('div');d.innerHTML=html;const el=d.firstChild;
  el.style.cssText+=`;position:fixed;left:${b.left}px;top:${b.top}px;width:${b.width}px;height:${b.height}px;z-index:50;pointer-events:none;margin:0;transform-origin:center`;
